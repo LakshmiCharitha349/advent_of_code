@@ -1,4 +1,4 @@
-import { intCode } from "../src/1202_prgm_alaram.js";
+import { findFirstElement, intCode } from "../src/1202_prgm_alaram.js";
 import { assertEquals } from "@std/assert";
 
 Deno.test.ignore("int code ", () => {
@@ -13,7 +13,7 @@ Deno.test.ignore("int code of 2 ", () => {
   assertEquals(intCode([2, 4, 4, 5, 99, 0]), [2, 4, 4, 5, 99, 9801]);
 });
 
-Deno.test("int code of 2 ", () => {
+Deno.test.ignore("int code of 2 ", () => {
   const input = Deno.readTextFileSync("./data/input.txt").split(",");
   const data = input.map((x) => parseInt(x));
   assertEquals(intCode(data), 5482655);
@@ -45,4 +45,10 @@ Deno.test.ignore("int code of 2 ", () => {
     0,
     99,
   ]);
+});
+
+Deno.test("int code of 2 ", () => {
+  const input = Deno.readTextFileSync("./data/input.txt").split(",");
+  const data = input.map((x) => parseInt(x));
+  assertEquals(findFirstElement(data), [49, 67]);
 });
