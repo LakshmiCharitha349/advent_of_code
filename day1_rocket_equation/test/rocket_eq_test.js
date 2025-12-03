@@ -1,4 +1,8 @@
-import { fuelRequirment, requiredFuelOf } from "../src/rocket_eq.js";
+import {
+  fuelRequirment,
+  requiredFuelOf,
+  requiredFuelOfModuleOf,
+} from "../src/rocket_eq.js";
 import { assertEquals } from "@std/assert";
 
 Deno.test("fuel required to module of mass ---> 12", () => {
@@ -23,10 +27,15 @@ Deno.test("fuel required to entire spaceCraft ---> 100756", () => {
 });
 Deno.test("fuel required to entire spaceCraft ---> 100756", () => {
   const input = Deno.readTextFileSync("./data/input.txt");
-  assertEquals(fuelRequirment(input), 3325347);
+  assertEquals(fuelRequirment(input), 4985145);
 });
 
 Deno.test("part-2 fuel required to single module ---> 100756", () => {
   const input = 12;
-  assertEquals(fuelRequirment(input), 2);
+  assertEquals(requiredFuelOfModuleOf(input), 2);
+});
+
+Deno.test("part-2 fuel required to single module ---> 100756", () => {
+  const input = `12\n12\n12`;
+  assertEquals(fuelRequirment(input), 6);
 });
