@@ -1,44 +1,92 @@
-const sum = (num1, num2) => num1 + num2;
+import { chunk } from "@std/collections/chunk";
 
-const product = (num1, num2) => num1 * num2;
+const performAdd = (computer) => {
+  let { program, currentIndex, isHalt } = computer;
 
-const executeOpCode = ({ opCode, program, isHalt }, index) => {
-  opCode = program[index];
-  const positionOfOpcode = index;
+  const [input1, input2, output] = program.slice(
+    currentIndex + 1,
+    currentIndex + 4,
+  );
 
-  const posOfInput1 = program[positionOfOpcode + 1];
-  const posOfInput2 = program[positionOfOpcode + 2];
-  const posOfOutput = program[positionOfOpcode + 3];
+  program[output] = program[input1] + program[input2];
+  currentIndex += 4;
 
-  switch (opCode) {
-    case 99:
-      isHalt = true;
-      break;
-    case 1:
-      program[posOfOutput] = sum(program[posOfInput1], program[posOfInput2]);
-      break;
-    case 2:
-      program[posOfOutput] = product(
-        program[posOfInput1],
-        program[posOfInput2],
-      );
+  return { program, currentIndex, isHalt };
+};
+const performMul = (computer) => {
+  let { program, currentIndex, isHalt } = computer;
 
-      break;
-  }
-  return { opCode, program, isHalt };
+  const [input1, input2, output] = program.slice(
+    currentIndex + 1,
+    currentIndex + 4,
+  );
+
+  program[output] = program[input1] * program[input2];
+  currentIndex += 4;
+
+  return { program, currentIndex, isHalt };
+};
+
+const performHalt = (computer) => {
+  computer.isHalt = true;
+  return computer;
+};
+
+const stepForward = (computer) => {
+  const executeOpcode = {
+    1: performAdd,
+    2: performMul,
+    99: performHalt,
+  };
+
+  const opCode = computer.program[computer.currentIndex];
+
+  return executeOpcode[opCode](computer);
+};
+
+const displayGrid = (computer) => {
+  console.clear();
+  const { program, currentIndex } = computer;
+  const paddedData = program.map((num) => num.toString().padStart(5, " "));
+  //paddedData[currentIndex] = eval(`"%c${program[currentIndex]}", "color:blue"`);
+  const chunks = chunk(paddedData, 8);
+  const result = chunks.map((chunk) => chunk.join(" ")).join("\n");
+  console.log(result);
+  //console.log(`%c${result}`, "color:blue");
+};
+
+const debugge = (computer) => {
+  displayGrid(computer);
+
+  console.log("\n\ncurrentIndex", computer.currentIndex);
+  console.log("isHalt", computer.isHalt);
+  prompt();
+};
+
+const createComputer = (program) => {
+  return {
+    program,
+    isHalt: false,
+    currentIndex: 0,
+  };
 };
 
 export const intCode = (data) => {
-  let prgmDetails = {
-    program: data,
-    isHalt: false,
-  };
-
-  for (let index = 0; prgmDetails.isHalt !== true; index = index + 4) {
-    prgmDetails = executeOpCode(prgmDetails, index);
+  let computer = createComputer(data);
+  while (!computer.isHalt) {
+    debugge(computer);
+    computer = stepForward(computer);
   }
-  return prgmDetails.program;
 };
+// export const intCode = (data) => {
+//   let computer = createComputer(data);
+
+//   while (computer.isHalt !== true) {
+//     computer = stepForward(computer);
+//   }
+
+//   debugge(computer);
+// };
 
 export const findFirstElement = (data) => {
   let copyOfData = [...data];
@@ -56,3 +104,9 @@ export const findFirstElement = (data) => {
 
   return 0;
 };
+
+//const data = [2, 3, 0, 3, 99];
+const input = Deno.readTextFileSync("../data/input.txt");
+
+const parseData = (data) => data.split(",").map((num) => parseInt(num));
+intCode(parseData(input));
