@@ -1,5 +1,3 @@
-import { equal } from "@std/assert/equal";
-
 const findPositions = (computer, arg, modes) => {
   const posOfArgs = {
     modeOf1: computer.index + 1,
@@ -37,57 +35,35 @@ const product = (computer, modes) => {
   computer.program[posOfArg3] = computer.program[posOfArg2] *
     computer.program[posOfArg1];
 };
-
-  const copyOfDroid = () => {
-    return {
-      prevPos: [...repairDroid.prevPos],
-      position: [...repairDroid.position],
-      heading: repairDroid.heading,
-      isOxygenFind: repairDroid.isOxygenFind,
-    };
+const copyOfRobot = (robot) => {
+  return {
+    lastMove: robot.lastMove,
+    position: [...robot.position],
+    target: [0, 0],
+    ordinateDetails: robot.ordinateDetails,
   };
-  export const copyOfIntCode = (program) => {
-    const amplifiers = [];
-    const copyOfProgram = [...program];
-    amplifiers.push(createComputer(copyOfProgram));
-
-    return amplifiers;
+};
+const createCopyOfComputer = (computer, program) => {
+  return {
+    program,
+    isHalt: computer.isHalt,
+    index: computer.index,
+    relativeBase: computer.relativeBase,
+    outPut: computer.outPut,
+    isOutPut: computer.isOutPut,
+    isDisplay: false,
   };
-
-const prevHeadings = {
-  1: 2,
-  2: 1,
-  4: 3,
-  3: 4,
 };
 
-const copyOfRead = (computer, modes) => {
-  const copyOfDroid2 = createRepairDroid();
-  const outPutOf2 = copyOfIntCode(computer, copyOfDroid2);
-  const copyOfDroid3 = createRepairDroid();
-  const outPutOf3 = copyOfIntCode(computer, copyOfDroid3);
-  const copyOfDroid4 = createRepairDroid();
-  const outPutOf4 = copyOfIntCode(computer, copyOfDroid4);
-  const ob = {};
-
-  for (let index = 1; index <= 4; index++) {
-    const copyOfDroid = createRepairDroid();
-    const outPutOf1 = copyOfIntCode(computer, copyOfDroid);
-    ob.push({ input: index, outPutOf1: outPutOf1 });
-  }
+const copyOfIntCode = (computer) => {
+  const copyOfProgram = [...computer.program];
+  return createCopyOfComputer(computer, copyOfProgram);
 };
 
-const read = (computer, modes) => {
+const read = (computer, modes, robot, index) => {
   const posOfArg1 = findPositions(computer, "modeOf1", modes);
-
-  computer.program[posOfArg1] = repairDroid.heading + 1;
-
-  repairDroid.heading = computer.program[posOfArg1];
-  console.log("input", computer.program[posOfArg1]);
-  //prompt();
+  computer.program[posOfArg1] = index;
 };
-
-const add = (x, deltaX) => parseInt(x) + deltaX;
 
 const deltas = {
   1: { deltaX: 0, deltaY: 1 },
@@ -96,31 +72,29 @@ const deltas = {
   3: { deltaX: -1, deltaY: 0 },
 };
 
-const roverPath = (repairDroid) => {
-  repairDroid.position[0] = repairDroid.position[0] +
-    deltas[repairDroid.heading].deltaX;
-  repairDroid.position[1] = repairDroid.position[1] +
-    deltas[repairDroid.heading].deltaY;
+const moveForward = (position, lastMove) => {
+  position[0] = position[0] + deltas[lastMove].deltaX;
+  position[1] = position[1] + deltas[lastMove].deltaY;
+  return position;
 };
 
-const display = (computer, modes) => {
-  computer.isOutPut = true;
+const mapordinates = (ordinate, output, robot) => {
+  if (ordinate in robot.ordinateDetails) {
+    return;
+  }
+  robot.ordinateDetails[ordinate] = output;
+};
+const display = (computer, modes, robot) => {
+  computer.isDisplay = true;
+
   const posOfArg1 = findPositions(computer, "modeOf1", modes);
-  //console.log("modes in display", modes);
   computer.outPut = computer.program[posOfArg1];
-  repairDroid.prevPos = [...repairDroid.position];
-  displayData(computer.program[posOfArg1]);
-  switch (computer.outPut) {
-    case 0:
-      //console.log("zerooo");
-      return;
-    case 1:
-      roverPath(repairDroid);
-      //console.log("outpu onee", { repairDroid });
-      break;
-    case 2:
-      // console.log("findd");
-      // prompt();
+
+  mapordinates(robot.target.toString(), computer.outPut, robot);
+
+  // move ONLY if success
+  if (computer.outPut === 1 || computer.outPut === 2) {
+    robot.position = [...robot.target];
   }
 };
 
@@ -168,8 +142,7 @@ const isTerminate = (computer, modes) => {
   computer.isHalt = true;
 };
 
-const readData = () => {
-};
+const readData = () => prompt("Ener num");
 const displayData = (data) => console.log("num", data);
 const isLess = (num1, num2) => num1 < num2;
 
@@ -181,10 +154,10 @@ const splitInstructions = (instruction) => {
   const modeOf1 = paddedInstruction[2];
   const modeOf2 = paddedInstruction[1];
   const modeOf3 = paddedInstruction[0];
-  // console.log({ opCode, modeOf1, modeOf2, modeOf3 });
+  //console.log({ opCode, modeOf1, modeOf2, modeOf3 });
   return { opCode, modeOf1, modeOf2, modeOf3 };
 };
-const executeIntructions = (computer, repairDroid) => {
+const executeIntructions = (computer, robot, index) => {
   const posOfPC = computer.index;
   const modes = splitInstructions(computer.program[posOfPC]);
 
@@ -202,17 +175,17 @@ const executeIntructions = (computer, repairDroid) => {
   };
 
   const opCodeDetails = selectOpcode[modes.opCode];
-  opCodeDetails.operation(computer, modes, repairDroid);
+  opCodeDetails.operation(computer, modes, robot, index);
   computer.index += opCodeDetails.inc;
   // console.log("computer", computer, posOfPC);
 };
 
-const createRepairDroid = () => {
+const createRobot = () => {
   return {
-    prevPos: [0, 0],
     position: [0, 0],
-    heading: 0,
-    isOxygenFind: false,
+    lastMove: 0,
+    target: [0, 0],
+    ordinateDetails: { "0,0": 1 },
   };
 };
 
@@ -224,31 +197,117 @@ const createComputer = (program) => {
     relativeBase: 0,
     outPut: 0,
     isOutPut: false,
+    isDisplay: false,
   };
 };
+const dfs = (computer, robot) => {
+  for (let direction = 1; direction <= 4; direction++) {
+    const nextPos = moveForward([...robot.position], direction);
 
-export const executeForCopy = (computer) => {
-  while (!computer.isOutPut) {
-    executeIntructions(computer);
+    if (nextPos.toString() in robot.ordinateDetails) continue;
+
+    const compCopy = copyOfIntCode(computer);
+    const robotCopy = copyOfRobot(robot);
+
+    robotCopy.lastMove = direction;
+    robotCopy.target = nextPos;
+    compCopy.isDisplay = false;
+
+    while (!compCopy.isDisplay && !compCopy.isHalt) {
+      executeIntructions(compCopy, robotCopy, direction);
+    }
+
+    if (compCopy.outPut === 0) continue;
+
+    dfs(compCopy, robotCopy);
   }
-
-  return computer.outPut;
 };
-
 export const intCode = (data) => {
   const computer = createComputer(data);
-  const repairDroid = createRepairDroid();
+  const robot = createRobot();
 
-  while (!computer.isHalt) {
-    executeIntructions(computer, repairDroid);
+  dfs(computer, robot);
+  return bfs(robot.ordinateDetails);
+};
+
+const findOxygenLocation = (ordinates) => {
+  for (const ordinate in ordinates) {
+    if (ordinates[ordinate] === 2) {
+      return ordinate;
+    }
   }
+};
 
-  return computer;
+const bfs = (ordinates) => {
+  let count = 0;
+  const positionOfOxygen = findOxygenLocation(ordinates);
+  const queue = [[positionOfOxygen, 0]];
+  const visited = { [positionOfOxygen]: true };
+
+  const directions = [
+    [0, 1],
+    [0, -1],
+    [1, 0],
+    [-1, 0],
+  ];
+
+  while (queue.length > 0) {
+    const [pos, steps] = queue.shift();
+    count = Math.max(count, steps);
+    const [x, y] = pos.split(",").map(Number);
+
+    for (const [dx, dy] of directions) {
+      const next = `${x + dx},${y + dy}`;
+
+      if (
+        ordinates[next] !== undefined &&
+        ordinates[next] !== 0 &&
+        !visited[next]
+      ) {
+        visited[next] = true;
+        console.log("ordinates", [next, steps + 1]);
+        queue.push([next, steps + 1]);
+      }
+    }
+    // queue.pop();
+    // queue.push([next, steps + 1]);
+  }
+  console.log("minutes", count);
 };
 
 const data = Deno.readTextFileSync("input.txt").split(",").map((x) => +x);
 
-const input = [3, 0, 104, 1, 3, 0, 104, 0, 99];
+const input = [3, 0, 4, 0, 99];
+
+const simpleMazeProgram = [
+  3,
+  100,
+  1008,
+  100,
+  1,
+  101,
+  1005,
+  101,
+  14,
+  1008,
+  100,
+  4,
+  101,
+  1005,
+  101,
+  14,
+  104,
+  0,
+  1105,
+  1,
+  0,
+  104,
+  1,
+  1105,
+  1,
+  0,
+];
+
 console.log(
-  intCode(input),
+  intCode(data),
 );

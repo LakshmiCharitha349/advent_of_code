@@ -95,9 +95,6 @@ const display = (computer, modes, robot) => {
   // move ONLY if success
   if (computer.outPut === 1 || computer.outPut === 2) {
     robot.position = [...robot.target];
-    if (computer.outPut === 2) {
-      console.log("target", robot.position);
-    }
   }
 };
 
@@ -233,9 +230,19 @@ export const intCode = (data) => {
   return bfs(robot.ordinateDetails);
 };
 
+const findOxygenLocation = (ordinates) => {
+  for (const ordinate in ordinates) {
+    if (ordinates[ordinate] === 2) {
+      return ordinate;
+    }
+  }
+};
+
 const bfs = (ordinates) => {
-  const queue = [["0,0", 0]];
-  const visited = { "0,0": true };
+  let count = 0;
+  const positionOfOxygen = findOxygenLocation(ordinates);
+  const queue = [[positionOfOxygen, 0]];
+  const visited = { [positionOfOxygen]: true };
 
   const directions = [
     [0, 1],
@@ -246,11 +253,7 @@ const bfs = (ordinates) => {
 
   while (queue.length > 0) {
     const [pos, steps] = queue.shift();
-
-    if (ordinates[pos] === 2) {
-      return steps;
-    }
-
+    count = Math.max(count, steps);
     const [x, y] = pos.split(",").map(Number);
 
     for (const [dx, dy] of directions) {
@@ -266,7 +269,10 @@ const bfs = (ordinates) => {
         queue.push([next, steps + 1]);
       }
     }
+    // queue.pop();
+    // queue.push([next, steps + 1]);
   }
+  console.log("minutes", count);
 };
 
 const data = Deno.readTextFileSync("input.txt").split(",").map((x) => +x);
