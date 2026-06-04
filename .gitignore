@@ -1,0 +1,3 @@
+.deno/
+.DS_Store
+*.log
